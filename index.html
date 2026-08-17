@@ -1,0 +1,530 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Core viewport -->
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+
+  <!-- App metadata -->
+  <meta
+    name="description"
+    content="GhostMode — a private, minimal operating system interface."
+  />
+  <meta name="theme-color" content="#050505" />
+  <meta name="color-scheme" content="dark" />
+
+  <!-- Mobile / PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  />
+  <meta name="apple-mobile-web-app-title" content="GhostMode" />
+
+  <title>GhostMode — Private Operating System</title>
+
+  <style>
+    /* =========================================================
+       GHOSTMODE
+       Global Foundation
+       ========================================================= */
+
+    :root {
+      --gm-bg: #000000;
+      --gm-surface: #080808;
+      --gm-surface-2: #0d0d0d;
+      --gm-surface-3: #121212;
+
+      --gm-border: rgba(255, 255, 255, 0.08);
+      --gm-border-strong: rgba(255, 255, 255, 0.14);
+
+      --gm-text: #f5f5f5;
+      --gm-text-secondary: #a1a1a1;
+      --gm-text-muted: #626262;
+
+      --gm-accent: #ffffff;
+      --gm-accent-soft: rgba(255, 255, 255, 0.08);
+
+      --gm-radius-sm: 10px;
+      --gm-radius-md: 16px;
+      --gm-radius-lg: 24px;
+      --gm-radius-xl: 30px;
+
+      --gm-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.65);
+
+      --gm-safe-top: env(safe-area-inset-top, 0px);
+      --gm-safe-bottom: env(safe-area-inset-bottom, 0px);
+      --gm-safe-left: env(safe-area-inset-left, 0px);
+      --gm-safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    /* =========================================================
+       RESET
+       ========================================================= */
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      height: 100%;
+      background: var(--gm-bg);
+      color-scheme: dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      width: 100%;
+      min-width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+
+      background:
+        radial-gradient(
+          circle at 50% -10%,
+          rgba(255, 255, 255, 0.055),
+          transparent 35%
+        ),
+        #000;
+
+      color: var(--gm-text);
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+      overflow: hidden;
+
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+
+      overscroll-behavior: none;
+      touch-action: manipulation;
+
+      user-select: none;
+      -webkit-user-select: none;
+
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      outline: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.65);
+      outline-offset: 3px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* =========================================================
+       ROOT APP
+       ========================================================= */
+
+    #root {
+      position: relative;
+
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+
+      margin: 0 auto;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.018),
+          transparent 25%
+        ),
+        var(--gm-bg);
+
+      overflow: hidden;
+
+      isolation: isolate;
+
+      padding-top: var(--gm-safe-top);
+      padding-bottom: var(--gm-safe-bottom);
+      padding-left: var(--gm-safe-left);
+      padding-right: var(--gm-safe-right);
+    }
+
+    /* =========================================================
+       AMBIENT BACKGROUND
+       ========================================================= */
+
+    #root::before {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      pointer-events: none;
+
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          rgba(255, 255, 255, 0.035),
+          transparent 32%
+        );
+
+      z-index: -2;
+    }
+
+    #root::after {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      pointer-events: none;
+
+      opacity: 0.025;
+
+      background-image:
+        linear-gradient(
+          rgba(255, 255, 255, 0.5) 1px,
+          transparent 1px
+        ),
+        linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.5) 1px,
+          transparent 1px
+        );
+
+      background-size: 40px 40px;
+
+      mask-image:
+        linear-gradient(
+          to bottom,
+          black,
+          transparent 80%
+        );
+
+      z-index: -1;
+    }
+
+    /* =========================================================
+       LOADING SCREEN
+       ========================================================= */
+
+    #ghostmode-loader {
+      position: fixed;
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #000;
+
+      z-index: 99999;
+
+      transition:
+        opacity 0.45s ease,
+        visibility 0.45s ease;
+    }
+
+    #ghostmode-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .loader-logo {
+      width: 58px;
+      height: 58px;
+
+      display: grid;
+      place-items: center;
+
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.08),
+          rgba(255, 255, 255, 0.015)
+        );
+
+      box-shadow:
+        0 15px 45px rgba(0, 0, 0, 0.7),
+        inset 0 1px rgba(255, 255, 255, 0.08);
+
+      animation: ghostPulse 1.8s ease-in-out infinite;
+    }
+
+    .loader-logo::before {
+      content: "";
+
+      width: 20px;
+      height: 20px;
+
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+
+      border-right-color: transparent;
+
+      animation: ghostSpin 0.9s linear infinite;
+    }
+
+    .loader-name {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+
+      color: #8b8b8b;
+    }
+
+    @keyframes ghostSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes ghostPulse {
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+
+      50% {
+        transform: scale(1.04);
+        opacity: 1;
+      }
+    }
+
+    /* =========================================================
+       GLOBAL GLASS UTILITY
+       ========================================================= */
+
+    .ghost-glass {
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.065),
+          rgba(255, 255, 255, 0.018)
+        );
+
+      border: 1px solid var(--gm-border);
+
+      box-shadow:
+        var(--gm-shadow),
+        inset 0 1px rgba(255, 255, 255, 0.045);
+
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    /* =========================================================
+       SCROLLBAR
+       ========================================================= */
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+    }
+
+    /* =========================================================
+       TEXT SELECTION
+       ========================================================= */
+
+    ::selection {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    /* =========================================================
+       MOBILE
+       ========================================================= */
+
+    @media (max-width: 600px) {
+      #root {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+      }
+    }
+
+    /* =========================================================
+       DESKTOP PHONE FRAME
+       ========================================================= */
+
+    @media (min-width: 601px) {
+      body {
+        display: grid;
+        place-items: center;
+
+        padding: 24px;
+
+        background:
+          radial-gradient(
+            circle at center,
+            #151515 0%,
+            #050505 45%,
+            #000 100%
+          );
+      }
+
+      #root {
+        width: min(430px, 100%);
+        height: min(900px, calc(100dvh - 48px));
+
+        min-height: 620px;
+
+        border-radius: 34px;
+
+        border: 1px solid rgba(255, 255, 255, 0.12);
+
+        box-shadow:
+          0 40px 100px rgba(0, 0, 0, 0.85),
+          0 0 0 1px rgba(255, 255, 255, 0.025);
+
+        overflow: hidden;
+      }
+    }
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* =========================================================
+       APP TRANSITION
+       ========================================================= */
+
+    #root {
+      animation: ghostBoot 0.6s ease both;
+    }
+
+    @keyframes ghostBoot {
+      from {
+        opacity: 0;
+        transform: scale(0.985);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =======================================================
+       LOADING SCREEN
+       ======================================================= -->
+
+  <div id="ghostmode-loader" aria-label="Loading GhostMode">
+    <div class="loader-content">
+      <div class="loader-logo"></div>
+      <div class="loader-name">GhostMode</div>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       MAIN APPLICATION
+       ======================================================= -->
+
+  <main
+    id="root"
+    role="application"
+    aria-label="GhostMode Private Operating System"
+  ></main>
+
+  <!-- =======================================================
+       APPLICATION ENTRY
+       ======================================================= -->
+
+  <script type="module" src="./main.js"></script>
+
+  <!-- =======================================================
+       LOADER CONTROL
+       ======================================================= -->
+
+  <script>
+    window.addEventListener("load", () => {
+      const loader = document.getElementById("ghostmode-loader");
+
+      if (!loader) return;
+
+      setTimeout(() => {
+        loader.classList.add("hidden");
+
+        setTimeout(() => {
+          loader.remove();
+        }, 500);
+      }, 350);
+    });
+  </script>
+
+</body>
+</html>
+```
