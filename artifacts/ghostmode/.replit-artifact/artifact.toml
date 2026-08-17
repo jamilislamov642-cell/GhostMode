@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Ghostmode"
+description = "A private focus command center for iOS and Android. Users set missions, run distraction-free Ghost Sessions, track streaks and focused time, review private activity logs, and build a Ghost Score without social noise or motivational clutter."
+version = "1.0.0"
+id = "artifacts/ghostmode"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 22731
+
+[services.development]
+run = "pnpm --filter @workspace/ghostmode run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ghostmode", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/ghostmode", "run", "serve" ]
+
+[services.env]
+PORT = "22731"
+BASE_PATH = "/"

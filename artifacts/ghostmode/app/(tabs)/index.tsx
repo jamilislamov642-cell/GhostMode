@@ -1,0 +1,50 @@
+import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColors } from '@/hooks/useColors';
+import { useGhost, formatFocus, formatTimer, initials } from '@/context/GhostContext';
+import { GhostMark } from '@/components/GhostMark';
+import { Panel } from '@/components/Panel';
+import { Screen, SectionLabel, TextLabel } from '@/components/Screen';
+
+export default function HomeScreen() {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const { missions, sessions, activeSession, ghostScore, streak, focusMinutes, startSession, triggerHaptic } = useGhost();
+  const currentMission = missions[0];
+  const latest = sessions.slice(0, 3);
+  const start = (mission = currentMission) => { if (mission) { triggerHaptic('medium'); startSession(mission); router.push('/session'); } else router.push('/new-mission'); };
+
+  return <Screen style={{ paddingTop: insets.top + 12 }}>
+    <View style={styles.header}>
+      <View style={styles.brand}><GhostMark size={31} /><View><Text style={[styles.wordmark, { color: colors.foreground }]}>GHOSTMODE</Text><TextLabel color={colors.mutedForeground} size={9}>PRIVATE OPERATING SYSTEM</TextLabel></View></View>
+      <View style={[styles.status, { borderColor: colors.border }]}><View style={[styles.statusDot, { backgroundColor: colors.success }]} /><TextLabel color={colors.steel} size={9}>SECURE</TextLabel></View>
+    </View>
+
+    <View style={styles.greeting}><TextLabel color={colors.mutedForeground}>MONDAY / 17 AUG</TextLabel><Text style={[styles.headline, { color: colors.foreground }]}>Make the next move count.</Text></View>
+
+    {activeSession ? <Panel accent style={{ marginTop: 22, backgroundColor: colors.secondary }} onPress={() => router.push('/session')}>
+      <View style={styles.panelTop}><TextLabel color={colors.primary}>GHOST SESSION / LIVE</TextLabel><Feather name="arrow-up-right" size={18} color={colors.primary} /></View>
+      <Text style={[styles.missionTitle, { color: colors.foreground }]}>{activeSession.missionTitle}</Text>
+      <View style={styles.liveRow}><Text style={[styles.liveTimer, { color: colors.foreground }]}>{formatTimer(activeSession.remainingSeconds)}</Text><View style={styles.liveMeta}><View style={[styles.liveLine, { backgroundColor: colors.primary }]} /><TextLabel color={colors.mutedForeground} size={10}>{activeSession.isPaused ? 'PAUSED' : 'FOCUS CHANNEL OPEN'}</TextLabel></View></View>
+    </Panel> : <Panel style={{ marginTop: 22 }}>
+      <View style={styles.panelTop}><TextLabel color={colors.primary}>CURRENT OP / READY</TextLabel><Feather name="crosshair" size={18} color={colors.primary} /></View>
+      <Text style={[styles.missionTitle, { color: colors.foreground }]}>{currentMission?.title ?? 'No mission assigned'}</Text>
+      <Text style={[styles.mutedBody, { color: colors.mutedForeground }]}>{currentMission?.detail ?? 'Choose one objective. Give it a clean runway.'}</Text>
+      <Pressable accessibilityLabel="Start new mission" testID="Start new mission" onPress={() => start()} style={({ pressed }) => [styles.primaryButton, { backgroundColor: colors.primary }, pressed && { opacity: 0.78 }]}><Feather name="play" size={15} color={colors.primaryForeground} /><Text style={[styles.buttonText, { color: colors.primaryForeground }]}>{currentMission ? 'DEPLOY MISSION' : 'CREATE MISSION'}</Text></Pressable>
+    </Panel>}
+
+    <SectionLabel right={<Pressable onPress={() => router.push('/new-mission')}><TextLabel color={colors.primary} size={10}>+ NEW</TextLabel></Pressable>}>MISSION POOL</SectionLabel>
+    {missions.length === 0 ? <Panel><View style={styles.emptyRow}><View style={[styles.emptyIcon, { backgroundColor: colors.secondary }]}><Feather name="target" size={17} color={colors.primary} /></View><View style={{ flex: 1 }}><Text style={[styles.emptyTitle, { color: colors.foreground }]}>Build your first objective</Text><Text style={[styles.mutedBody, { color: colors.mutedForeground }]}>Keep it specific. Keep it yours.</Text></View><Feather name="chevron-right" size={18} color={colors.mutedForeground} /></View></Panel> : missions.slice(0, 3).map((mission) => <Panel key={mission.id} onPress={() => start(mission)} style={styles.missionRow}><View style={[styles.missionBadge, { backgroundColor: colors.secondary }]}><Text style={[styles.badgeText, { color: colors.primary }]}>{initials(mission.title)}</Text></View><View style={{ flex: 1 }}><Text style={[styles.missionLineTitle, { color: colors.foreground }]} numberOfLines={1}>{mission.title}</Text><TextLabel color={colors.mutedForeground} size={10}>{mission.targetMinutes} MIN / READY</TextLabel></View><Feather name="play-circle" size={23} color={colors.primary} /></Panel>)}
+
+    <SectionLabel right={<Pressable onPress={() => router.push('/intel')}><TextLabel color={colors.primary} size={10}>VIEW INTEL</TextLabel></Pressable>}>GHOST SIGNAL</SectionLabel>
+    <View style={styles.statsGrid}><Panel style={styles.scorePanel}><TextLabel color={colors.mutedForeground} size={10}>GHOST SCORE</TextLabel><Text style={[styles.score, { color: colors.foreground }]}>{String(ghostScore).padStart(3, '0')}</Text><View style={styles.scoreFoot}><Feather name="trending-up" size={13} color={colors.success} /><TextLabel color={colors.success} size={10}>{sessions.length ? '+' + sessions.length * 35 + ' THIS CYCLE' : 'BUILD BASELINE'}</TextLabel></View></Panel><Panel style={styles.smallStat}><TextLabel color={colors.mutedForeground} size={10}>FOCUS TIME</TextLabel><Text style={[styles.smallNumber, { color: colors.foreground }]}>{formatFocus(focusMinutes * 60)}</Text><TextLabel color={colors.mutedForeground} size={9}>ALL TIME</TextLabel></Panel><Panel style={styles.smallStat}><TextLabel color={colors.mutedForeground} size={10}>STREAK</TextLabel><Text style={[styles.smallNumber, { color: colors.foreground }]}>{streak}<Text style={{ fontSize: 16 }}>d</Text></Text><TextLabel color={colors.mutedForeground} size={9}>CONSECUTIVE</TextLabel></Panel></View>
+
+    <SectionLabel right={<Pressable onPress={() => router.push('/sessions')}><TextLabel color={colors.primary} size={10}>FULL LOG</TextLabel></Pressable>}>RECENT OPERATIONS</SectionLabel>
+    {latest.length === 0 ? <Panel><View style={styles.logEmpty}><Feather name="radio" size={18} color={colors.mutedForeground} /><Text style={[styles.mutedBody, { color: colors.mutedForeground }]}>Your completed operations will appear here.</Text></View></Panel> : latest.map((session) => <View key={session.id} style={styles.logRow}><View style={[styles.logMark, { borderColor: colors.success }]}><Feather name="check" size={13} color={colors.success} /></View><View style={{ flex: 1 }}><Text style={[styles.missionLineTitle, { color: colors.foreground }]}>{session.missionTitle}</Text><TextLabel color={colors.mutedForeground} size={10}>{formatFocus(session.focusedSeconds)} / {session.checkpoints} CHECKPOINTS</TextLabel></View><TextLabel color={colors.mutedForeground} size={10}>{new Date(session.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase()}</TextLabel></View>)}
+  </Screen>;
+}
+
+const styles = StyleSheet.create({ header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, brand: { flexDirection: 'row', alignItems: 'center', gap: 11 }, wordmark: { fontFamily: 'Inter_700Bold', fontSize: 16, letterSpacing: 2.3 }, status: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 6 }, statusDot: { width: 5, height: 5, borderRadius: 3 }, greeting: { marginTop: 32 }, headline: { fontFamily: 'Inter_600SemiBold', fontSize: 27, letterSpacing: -0.7, marginTop: 8 }, panelTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, missionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 23, letterSpacing: -0.4, marginTop: 18 }, mutedBody: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 20, marginTop: 7 }, primaryButton: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 9, borderRadius: 10, paddingHorizontal: 15, paddingVertical: 12, marginTop: 20 }, buttonText: { fontFamily: 'Inter_700Bold', fontSize: 11, letterSpacing: 1.1 }, liveRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 17 }, liveTimer: { fontFamily: 'Inter_700Bold', fontSize: 38, letterSpacing: -1.8 }, liveMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 7 }, liveLine: { width: 20, height: 2 }, missionRow: { flexDirection: 'row', alignItems: 'center', gap: 13, marginBottom: 10, paddingVertical: 13 }, missionBadge: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, badgeText: { fontFamily: 'Inter_700Bold', fontSize: 12, letterSpacing: 0.6 }, missionLineTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14, marginBottom: 6 }, emptyRow: { flexDirection: 'row', alignItems: 'center', gap: 13 }, emptyIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' }, emptyTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 }, statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, scorePanel: { flex: 1, minWidth: '52%' }, smallStat: { flex: 1, minWidth: '40%', justifyContent: 'space-between' }, score: { fontFamily: 'Inter_700Bold', fontSize: 45, letterSpacing: -2, marginTop: 7 }, scoreFoot: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 12 }, smallNumber: { fontFamily: 'Inter_700Bold', fontSize: 27, letterSpacing: -1, marginTop: 18 }, logEmpty: { flexDirection: 'row', alignItems: 'center', gap: 10 }, logRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#20242A' }, logMark: { width: 28, height: 28, borderRadius: 9, borderWidth: 1, alignItems: 'center', justifyContent: 'center' } });
